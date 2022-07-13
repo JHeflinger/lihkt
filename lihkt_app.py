@@ -57,6 +57,12 @@ def handleCommands(com):
                 else:
                     sysPrint("Error: filename entered was not found")
                 return
+        elif state == "LOAD":
+            if com == "u" or com == "unload":
+                sysPrint("Unloaded " + fileName + ". Available commands have changed. Use \"h\" or \"help\" to view")
+                fileName = ""
+                state = "MAIN"
+                return
         sysPrint("Invalid command. To bring up a list of available commands, use \"h\" or \"help\"")
 
 def handleCreateFile():
