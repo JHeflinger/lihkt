@@ -1,18 +1,26 @@
 from os.path import exists
 from datetime import datetime
 from os import listdir
+from os import remove
 
 global commands
 global appRunning
 global fileName
 global state
+global saved
+global tempFile
 
 state = "MAIN"
-defaultCommands = "\t\t help - brings up a list of commands \n\t\t quit - quits the application \n\t\t status - returns the status of the current resume"
+defaultCommands = "\t\t help - brings up a list of commands \n\t\t quit - quits the application \n\t\t info - returns the status of the current resume"
 mainCommands = "\t\t load - load a new .lkt file to handle \n\t\t create - create a new .lkt file \n\t\t delete - delete an existing file"
-loadCommands = "\t\t unload - unload the current file \n\t\t edit - edit the current file \n\t\t generate - generate a new resume"
+loadCommands = "\t\t unload - unload the current file \n\t\t edit - edit the current file \n\t\t generate - generate a new resume \n\t\t view - view the contents of your file"
+editCommands = "\t\t save - save changes to the file \n\t\t add - add an element to your resume \n\t\t remove - remove an element of your resume \n\t\t modify - modify an element to your resume \n\t\t finish - finish editing your resume \n\t\t view - view the contents of your file"
+elements = ["first_name", "middle_name", "last_name", "email", "phone_number", "address"]
+fileElements = []
 appRunning = True
+saved = True
 fileName = ""
+tempFile = []
 
 def mainLoop():
     com = getInput()
@@ -22,18 +30,49 @@ def handleCommands(com):
     global appRunning
     global fileName
     global state
+    global tempFile
+    global elements
+    if fileName != "":
+        if com == "v" or com == "view":
+            miniSavedStr = ""
+            if saved:
+                miniSavedStr = "SAVED"
+            else:
+                miniSavedStr = "NOT SAVED"
+            sysPrint(fileName + " currently reads as follows: ")
+            print("\t STATUS: " + miniSavedStr)
+            print("\t last saved: " + tempFile[0][0:len(tempFile[0]) - 1])
+            for i in range(len(tempFile)):
+                if i > 0:
+                    print("\t " + tempFile[i][0:len(tempFile[i]) - 1])
+            return
+        elif com == "s" or com == "save":
+            sysPrint("Saving file... Please do not exit the application or data may be corrupted")
+            with open("saves/" + fileName, "w") as f:
+                f.writelines(tempFile)
+            sysPrint("Saving finished!")
+            saved = True
+            return
     if com == "h" or com == "help":
         if state == "MAIN":
             sysPrint("Currently usable commands:\n" + defaultCommands + "\n" + mainCommands)
         elif state == "LOAD":
             sysPrint("Currently usable commands:\n" + defaultCommands + "\n" + loadCommands)
+        elif state == "EDIT":
+            sysPrint("Currently usable commands:\n" + defaultCommands + "\n" + editCommands)
         else:
             sysPrint("CONSOLE ERROR: UNKOWN STATE. CLOSING APPLICATION.")
             appRunning = False
     elif com == "q" or com == "quit":
+        if saved == False:
+            sysPrint("WARNING: you have unsaved work. Would you like to go back to save your work? (y/n)")
+            yOrN = getYorN()
+            if yOrN == "y":
+                sysPrint("returning to menu...")
+                return
         sysPrint("Exiting application...")
         appRunning = False
-    elif com == "s" or com == "status":
+    elif com == "i" or com == "info":
         sysPrint("STATUS: " + getStatus())
     else:
         if state == "MAIN":
@@ -41,23 +80,81 @@ def handleCommands(com):
                 sysPrint("Welcome to resume creation! What would you like to name your new resume?")
                 handleCreateFile()
                 return
-            if com == "l" or com == "load":
+            elif com == "l" or com == "load":
                 sysPrint("Which file would you like to load? (If you'd like to see a list of available files, enter \"?browse\")")
                 com = getInput("FILENAME: ")
                 fileList = listdir("saves/")
-                if com == "?browse":
+                while com == "?browse":
                     sysPrint("Current available files:")
                     for f in fileList:
                         print("\t" + f.__str__())
                     com = getInput("FILENAME: ")
                 if (com in fileList):
                     fileName = com
+                    with open("saves/" + fileName, "r") as f:
+                        tempFile = f.readlines()
                     state = "LOAD"
                     sysPrint("Successfully loaded " + com + "! Additional commands are now available. Use \"h\" or \"help\" to view")
                 else:
                     sysPrint("Error: filename entered was not found")
                 return
+            elif com == "d" or com == "delete":
+                sysPrint("Which file would you like to delete? (If you'd like to see a list of available files, enter \"?browse\")")
+                com = getInput("FILENAME: ")
+                fileList = listdir("saves/")
+                while com == "?browse":
+                    sysPrint("Current available files:")
+                    for f in fileList:
+                        print("\t" + f.__str__())
+                    com = getInput("FILENAME: ")
+                if (com in fileList):
+                    sysPrint("All information in this file will be permanently lost. Are you sure you want to delete " + com + "? (y/n)")
+                    yOrN = getYorN()
+                    if yOrN == "y":
+                        remove("saves/" + com)
+                        sysPrint("Successfully deleted " + com + "!")
+                    else:
+                        sysPrint("Cancelled file deletion.")
+                else:
+                    sysPrint("Error: filename entered was not found")
+                return
+        elif state == "LOAD":
+            if com == "u" or com == "unload":
+                sysPrint("Unloaded " + fileName + ". Available commands have changed. Use \"h\" or \"help\" to view")
+                fileName = ""
+                state = "MAIN"
+                return
+            elif com == "e" or com == "edit":
+                sysPrint("You are now in EDIT mode. Available commands have been changed. Use \"h\" or \"help\" to view")
+                state = "EDIT"
+                return
+        elif state == "EDIT":
+            if com == "a" or com == "add":
+                sysPrint("What element would you like to add? (If you'd like to see a list of available elements, enter \"?browse\")")
+                com = getInput("ELEMENT: ")
+                fileList = listdir("saves/")
+                while com == "?browse":
+                    sysPrint("Current available elements:")
+                    for i in range(len(elements)):
+                        print("\t" + elements[i])
+                    com = getInput("ELEMENT: ")
+                if (com in elements):
+                    addElement(com)
+                else:
+                    sysPrint("Error: filename entered was not found")
+                return
         sysPrint("Invalid command. To bring up a list of available commands, use \"h\" or \"help\"")
+
+def addElement(com):
+    global tempFile
+    global saved
+    #check for duplicate elements
+    sysPrint("Adding " + com + " to resume! Please fill out the contents of this field")
+    contents = getInput()
+    newField = com + ":" + contents + "\n"
+    tempFile.append(newField)
+    saved = False
+    sysPrint("Successfully added! To view the contents of your current file, use the command \"v\" or \"view\"")
 
 def handleCreateFile():
     global fileName
@@ -83,8 +180,11 @@ def getStatus():
     if len(fileName) <= 0:
         return "No file currently uploaded. To begin resume creation/edit use the corresponding command."
     else:
-        if state == "LOAD":
-            return fileName + " is currently loaded and ready to edit."
+        if state == "LOAD" or state == "EDIT":
+            if saved == True:
+                return fileName + " is currently loaded and ready to edit!"
+            else:
+                return fileName + " is currently NOT SAVED. Make sure to save your work before exiting the application!"
 
 def validateNum(str):
     num = -1
