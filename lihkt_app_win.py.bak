@@ -3,6 +3,7 @@ from datetime import datetime
 from os import listdir
 from os import remove
 from pyautogui import typewrite
+from fpdf import FPDF
 
 global commands
 global appRunning
@@ -16,7 +17,7 @@ defaultCommands = "\t\t help - brings up a list of commands \n\t\t quit - quits 
 mainCommands = "\t\t load - load a new .lkt file to handle \n\t\t create - create a new .lkt file \n\t\t delete - delete an existing file"
 loadCommands = "\t\t unload - unload the current file \n\t\t edit - edit the current file \n\t\t generate - generate a new resume \n\t\t view - view the contents of your file"
 editCommands = "\t\t save - save changes to the file \n\t\t add - add an element to your resume \n\t\t remove - remove an element of your resume \n\t\t modify - modify an element to your resume \n\t\t finish - finish editing your resume \n\t\t view - view the contents of your file"
-elements = ["first_name", "middle_name", "last_name", "email", "phone_number", "address", "bio", "github", "twitter", "linkedin", "skills"]
+elements = ["theme", "full_name", "email", "phone_number", "address", "address_2"]
 fileElements = []
 appRunning = True
 saved = True
@@ -95,6 +96,8 @@ def handleCommands(com):
                     for f in fileList:
                         print("\t" + f.__str__())
                     com = getInput("FILENAME: ")
+                if (".lkt" in com) == False:
+                    com += ".lkt"
                 if (com in fileList):
                     fileName = com
                     with open("saves/" + fileName, "r") as f:
@@ -133,6 +136,12 @@ def handleCommands(com):
             elif com == "e" or com == "edit":
                 sysPrint("You are now in EDIT mode. Available commands have been changed. Use \"h\" or \"help\" to view")
                 state = "EDIT"
+                return
+            elif com == "g" or com == "generate":
+                if saved == False:
+                    sysPrint("ERROR: You have unsaved work. All work must be saved before generating.")
+                    return
+                generatePDF()
                 return
         elif state == "EDIT":
             if com == "a" or com == "add":
@@ -192,6 +201,63 @@ def handleCommands(com):
                 return
         sysPrint("Invalid command. To bring up a list of available commands, use \"h\" or \"help\"")
 
+def generatePDF():
+    global tempFile
+    theme = ""
+    sysPrint("Preparing file to generate...")
+    if ("theme" in getElements()) == False:
+        sysPrint("No theme element found in your current file. Would you like to add one? (y/n)")
+        yOrN = getYorN()
+        if yOrN == "y":
+            sysPrint("Please enter your desired theme. If you'd like a list of available themes, enter \"?browse\")")
+            com = getInput("THEME: ")
+            fileList = listdir("themes/")
+            while com == "?browse":
+                sysPrint("Current available themes:")
+                for f in fileList:
+                    print("\t" + f.__str__()[0:f.__str__().index(".thm")])
+                com = getInput("THEME: ")
+            if (".thm" in com) == False:
+                com += ".thm"
+            if (com in fileList):
+                tempFile.append("theme:" + com + "\n")
+                now = datetime.now()
+                date = now.strftime("%d/%m/%Y %H:%M:%S")
+                tempFile[0] = "Last saved: " + date + "\n"
+                with open("saves/" + fileName, "w") as f:
+                    f.writelines(tempFile)
+                sysPrint("Successfully added theme!")
+            else:
+                sysPrint("ERROR: invalid theme entered. Returning to menu...")
+                return
+        else:
+            sysPrint("No valid theme detected. Using default theme...")
+            theme = "default.thm"
+    if theme != "default.thm":
+        for s in tempFile:
+            if "theme" in s:
+                theme = s[6:len(s) - 1]
+                break
+    sysPrint(theme)
+    fileList = listdir("themes/")
+    if theme in fileList:
+        themeContent = []
+        pdf = FPDF()
+        pdf.add_page()
+        with open("themes/" + theme, "r") as f:
+            themeContent = f.readlines()
+        for t in themeContent:
+            fullElement = t.split(":")
+            qualifier = fullElement[0]
+            define = fullElement[1].split(",")
+            content = getContent(qualifier)
+            if content != "":
+                pdf.set_font(define[0], size = int(define[1]))
+                pdf.cell(w = int(define[2]), h = int(define[3]), txt = define[4] + content, border = define[5], ln = int(define[6]), align = define[7], fill = define[8], link = define[9][0:len(define[9]) - 1])
+        pdf.output("PDFs/testpdf.pdf")
+    else:
+        sysPrint("ERROR: Could not load theme. Please make sure " + theme + " is inside your \"themes\" folder. Returning to menu...")
+
 def modifyElement(com):
     global tempFile
     global saved
@@ -215,6 +281,13 @@ def removeElement(com):
             saved = False
             sysPrint("Sucessfully removed " + com + "!")
             return
+
+def getContent(con):
+    global tempFile
+    for t in tempFile[1:len(tempFile)]:
+        if t[0:t.index(":")] == con:
+            return t[t.index(":") + 1:len(t) - 1]
+    return ""
 
 def getElements():
     global tempFile
