@@ -1,7 +1,18 @@
-Last saved: 18/07/2022 16:27:05
+Last saved: 19/07/2022 11:59:52
 full_name:Jason Heflinger
 email:jasonheflinger@gmail.com
 theme:default.thm
 phone_number:(858) 267-8107
 address:8315 Via Panacea | San Diego, CA, 92129
 address_2:525 S Center St | 47803 Terre Haute, Indiana
+degree:Bachelors of Science, Computer Science | May 2025
+gpa:3.81
+education_extras:Related courses: Data Structures and Algorithms, Combinatorics, Differentials, Object Oriented Software Development, Computer Architecture
+education:Rose-Hulman Institute of Technology, Terre Haute, IN
+project:Pocket Python Minicontroller | Spring 2022
+project_description:\t- Developed with CircuitPython on a Raspberry Pi Pico\n\t- Utilizes an OLED screen, SD reader/writer, and a portable LiPo Battery\n\t- Handheld device that can run custom Python scripts loaded on an SD card\n\t- Useful for applications like an autoclicker, software installer, automated tasks, etc
+project_2:ORIS mini | Summer 2022
+project_description_2:\t- Developed in C++ using an ESP32 TFT display board\n\t- Manipulates network connections and utilizes deauther capability\n\t- Integrates a "minigame" in which the player can feed a small pocket monster data to grow stronger\n\t- Open source project for anyone to develop and use
+project_3:RMI Inventory Tracker | Summer 2022
+project_description_3:\t- Developed in Python 3.10 on a Raspberry Pi 3\n\t- Uses a scanner and a psuedo-database through git integration\n\t- Keeps track of scanned items through a barcode scanner\n\t- Collects data and sends out automated emails on supply usage and missing items
+skills:\tProgramming: Java, C, C#, C++, Python, JavaScript, HTML, CSS, MySQL, Assembly, Verilog, Asp.NET, OpenGL, OpenCV, SDL2, LibGDX\n\tApplications: Eclipse, Visual Studio, Visual Studio Code, Intel Quartus Prime, Unity, ARM64 Keil, Adobe Illustrator/Photoshop, Aseprite\n\tPersonal: Great work ethic, Leadership, Communication, 93 WPM, reliability
