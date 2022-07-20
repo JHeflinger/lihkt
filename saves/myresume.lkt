@@ -1,4 +1,4 @@
-Last saved: 19/07/2022 11:59:52
+Last saved: 20/07/2022 14:07:36
 full_name:Jason Heflinger
 email:jasonheflinger@gmail.com
 theme:default.thm
@@ -16,3 +16,14 @@ project_description_2:\t- Developed in C++ using an ESP32 TFT display board\n\t-
 project_3:RMI Inventory Tracker | Summer 2022
 project_description_3:\t- Developed in Python 3.10 on a Raspberry Pi 3\n\t- Uses a scanner and a psuedo-database through git integration\n\t- Keeps track of scanned items through a barcode scanner\n\t- Collects data and sends out automated emails on supply usage and missing items
 skills:\tProgramming: Java, C, C#, C++, Python, JavaScript, HTML, CSS, MySQL, Assembly, Verilog, Asp.NET, OpenGL, OpenCV, SDL2, LibGDX\n\tApplications: Eclipse, Visual Studio, Visual Studio Code, Intel Quartus Prime, Unity, ARM64 Keil, Adobe Illustrator/Photoshop, Aseprite\n\tPersonal: Great work ethic, Leadership, Communication, 93 WPM, reliability
+experience:Orange Coast Websites Intern | Summer/Fall/Winter 2020
+experience_description:\t- Utilized Wordpress and Shopify to develop ecommerce websites\n\t- Developed in HTML, Liquid, and CSS\n\t- Worked with clients to make vision reality
+experience_2:Rose-Hulman Ventures | Summer 2022
+experience_description_2:\t- Utilized ASP.Net framework to develop and maintain a webapp\n\t- Developed and maintained a database and server using SQL\n\t- Used C#, HTML, CSS, and JavaScript to develop a solid backend and frontend as a full stack developer
+activity:RHIT Robomasters Software Lead | 2021 - Present
+activity_2:RHIT Makerlab | 2021 - Present
+activity_3:Society of Asian Scientists and Engineers | 2021 - Present
+activity_4:NJROTC Commanding Officer | 2017 - 2021
+activity_5:NJROTC Marksmanship Team Commander | 2018 - 2021
+activity_6:NJROTC Armed Exhibition Team Commander | 2019-2021
+activity_7:NJROTC Field Meet Team | 2017-2021

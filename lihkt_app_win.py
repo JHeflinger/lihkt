@@ -17,8 +17,7 @@ defaultCommands = "\t\t help - brings up a list of commands \n\t\t quit - quits 
 mainCommands = "\t\t load - load a new .lkt file to handle \n\t\t create - create a new .lkt file \n\t\t delete - delete an existing file"
 loadCommands = "\t\t unload - unload the current file \n\t\t edit - edit the current file \n\t\t generate - generate a new resume \n\t\t view - view the contents of your file"
 editCommands = "\t\t save - save changes to the file \n\t\t add - add an element to your resume \n\t\t remove - remove an element of your resume \n\t\t modify - modify an element to your resume \n\t\t finish - finish editing your resume \n\t\t view - view the contents of your file"
-elements = ["theme", "full_name", "email", "phone_number", "address", "address_2", "degree", "education", "gpa", "education_extras", "project", 
-            "project_description", "project_2", "project_description_2", "project_3", "project_description_3", "skills"]
+elements = []
 fileElements = []
 appRunning = True
 saved = True
@@ -82,6 +81,11 @@ def handleCommands(com):
         appRunning = False
     elif com == "i" or com == "info":
         sysPrint("STATUS: " + getStatus())
+    elif com == "debug":
+        try:
+            exec(getRawInput(getInput()))
+        except:
+            sysPrint("Unable to execute command.")
     else:
         if state == "MAIN":
             if com == "c" or com == "create":
@@ -239,7 +243,7 @@ def generatePDF():
             if "theme" in s:
                 theme = s[6:len(s) - 1]
                 break
-    sysPrint(theme)
+    sysPrint("Generating PDF using " + theme + "...")
     fileList = listdir("themes/")
     if theme in fileList:
         themeContent = []
@@ -258,11 +262,20 @@ def generatePDF():
                 for c in contentShards:
                     if c == contentShards[len(contentShards) - 1]:
                         pdf.set_font(define[0], size = int(define[1]))
-                        pdf.cell(w = int(define[2]), h = int(define[3]), txt = define[4] + c, border = define[5], ln = int(define[6]), align = define[7], fill = define[8], link = define[9][0:len(define[9]) - 1])
+                        pdf.cell(w = int(define[2]), h = int(define[3]), txt = getRawInput(define[4]) + c, border = define[5], ln = int(define[6]), align = define[7], fill = define[8], link = define[9][0:len(define[9]) - 1])
                     else:
                         pdf.set_font(define[0], size = int(define[1]))
-                        pdf.cell(w = int(define[2]), h = int(define[3]), txt = define[4] + c, border = define[5], ln = 1, align = define[7], fill = define[8], link = define[9][0:len(define[9]) - 1])
-        pdf.output("PDFs/testpdf.pdf")
+                        pdf.cell(w = int(define[2]), h = int(define[3]), txt = getRawInput(define[4]) + c, border = define[5], ln = 1, align = define[7], fill = define[8], link = define[9][0:len(define[9]) - 1])
+        pdf.output("PDFs/lastgeneratedpdf.pdf")
+        sysPrint("Finished generating PDF! What would you like to name your PDF? (leave blank to use .lkt filename)")
+        pdfname = getInput("PDF NAME:")
+        if pdfname == "":
+            pdfname = fileName[0:len(fileName) - 4]
+        while len(fileName) <= 0 or ("\\" in fileName) or (":" in fileName) or ("*" in fileName) or ("?" in fileName) or ("\"" in fileName) or ("<" in fileName) or (">" in fileName) or ("|" in fileName):
+            sysPrint("Invalid name detected. Please use a valid file name. (cannot include the characters \"\\\", \":\", \"*\", \"?\", \"\"\", \"<\", \">\", or \"|\")")
+            pdfname = getInput("PDF NAME:")
+        pdf.output("PDFs/" + pdfname + ".pdf")
+        sysPrint("Successfully generated pdf as " + pdfname + ".pdf! You can find your PDF in the PDFs folder!")
     else:
         sysPrint("ERROR: Could not load theme. Please make sure " + theme + " is inside your \"themes\" folder. Returning to menu...")
 
@@ -316,8 +329,11 @@ def addElement(com):
             modifyElement(com)
             return
         else:
-            sysPrint("Returned to edit menu")
-            return
+            sysPrint("Would you like to make an additional field instead? (y/n)")
+            yOrN = getYorN()
+            if yOrN == "n":
+                sysPrint("Returning to menu...")
+                return
     sysPrint("Adding " + com + " to resume! Please fill out the contents of this field")
     contents = getInput("CONTENTS: ")
     newField = com + ":" + contents + "\n"
@@ -395,7 +411,7 @@ def getRawInput(myInput):
     while "\\n" in myInput:
         myInput = myInput[0:myInput.index("\\n")] + "\n" + myInput[myInput.index("\\n") + 2:len(myInput)]
     while "\\t" in myInput:
-        myInput = myInput[0:myInput.index("\\t")] + "     " + myInput[myInput.index("\\t") + 2:len(myInput)]
+        myInput = myInput[0:myInput.index("\\t")] + "    " + myInput[myInput.index("\\t") + 2:len(myInput)]
     return myInput
 
 def getPresetInput(prompt, prefill=''):
@@ -412,6 +428,14 @@ def getPresetInput(prompt, prefill=''):
     finally:
         readline.set_startup_hook()
 
+def loadElements():
+    global elements
+    with open("settings/elements.stg", "r") as f:
+        elements = f.readlines()
+    for i in range(len(elements)):
+        elements[i] = elements[i][0:len(elements[i]) - 1]
+
+loadElements()
 sysPrint("Welcome to LIKHT!\n\t -> You are currently using the WINDOWS version! \n\t -> To begin, type in a valid command below. To get a list of commands, enter \"h\" or \"help\"!")
 while(appRunning):
     mainLoop()
