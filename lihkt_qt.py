@@ -1,7 +1,7 @@
 import lihkt
 import sys
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QKeySequence
 from PyQt5.QtWidgets import (
     QApplication,
     QLabel,
@@ -22,29 +22,31 @@ from PyQt5.QtWidgets import (
     QScrollArea,
     QMenu,
     QAction,
-    QTabWidget)
+    QTabWidget,
+    QShortcut)
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.files = []
         self.setWindowTitle("LIHKT")
-        self.setFixedSize(QSize(300, 300))
+        self.resize(QSize(900, 500))
         self._createActions()
         self._connectActions()
         self._createMenuBar()
+        self._createShortCuts()
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
     
     def _createActions(self):
         self.newThemeAction = QAction("&New Theme", self)
         self.newContentAction = QAction("&New Content", self)
-        self.openAction = QAction("&Open", self)
+        self.openAction = QAction("&Open (ctrl+o)", self)
         self.importThemesAction = QAction("&Import Themes", self)
         self.importElementsAction = QAction("&Import Elements", self)
-        self.saveAction = QAction("&Save", self)
+        self.saveAction = QAction("&Save (ctrl+s)", self)
         self.saveAsAction = QAction("&Save As", self)
-        self.shellAction = QAction("&Shell", self)
+        self.shellAction = QAction("&Shell (alt+s)", self)
     
     def _createMenuBar(self):
         menuBar = self.menuBar()
@@ -69,15 +71,26 @@ class MainWindow(QMainWindow):
         self.openAction.triggered.connect(self.openFile)
         #self.importThemesAction.triggered.connect(self.close)
         #self.importElementsAction.triggered.connect(self.copyContent)
-        #self.saveAction.triggered.connect(self.pasteContent)
+        self.saveAction.triggered.connect(self.saveFile)
         #self.saveAsAction.triggered.connect(self.cutContent)
         self.shellAction.triggered.connect(self.openShell)
+      
+    def _createShortCuts(self):
+        self.shortcut_save = QShortcut(QKeySequence('Ctrl+S'), self)
+        self.shortcut_save.activated.connect(self.saveFile)
+        self.shortcut_open = QShortcut(QKeySequence('Ctrl+O'), self)
+        self.shortcut_open.activated.connect(self.openFile)
+        self.shortcut_shell = QShortcut(QKeySequence('Alt+S'), self)
+        self.shortcut_shell.activated.connect(self.openShell)
+      
+    def saveFile(self):
+        self.tabs.currentWidget().save()
         
     def openFile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open file', 'c:\\',"Likht files (*.lkt *.thm)")
         self.files.append(fname)
         if fname[0] != "":
-            self.tabs.addTab(ElementsTab(fname[0]), fname[0].split("/")[len(fname[0].split("/")) - 1])
+            self.tabs.addTab(ElementsTab(fname[0], self.tabs), fname[0].split("/")[len(fname[0].split("/")) - 1])
             
     def openShell(self):
         dlg = ShellDialog()
@@ -118,7 +131,7 @@ class ShellDialog(QDialog):
         self.setLayout(self.layout)
 
 class ElementsTab(QWidget):
-    def __init__(self, filepath):
+    def __init__(self, filepath, tabWidget):
         super().__init__()
         
         #file handling
@@ -131,7 +144,10 @@ class ElementsTab(QWidget):
             self.elements = file.readlines()
         
         #layout
+        self.fileWidgets = {}
         self.layout = QVBoxLayout()
+        self.tabWidget = tabWidget
+        self.saved = True
         for element in self.elements:
         
             content = element.split(":")
@@ -145,9 +161,17 @@ class ElementsTab(QWidget):
                 elementContent = [""]
                 
             if type == "S":
-                lineLayout.addWidget(QLineEdit(elementContent[0]))
+                widget = QLineEdit(unfactorText(elementContent[0]))
+                widget.textChanged.connect(self.unSave)
+                self.fileWidgets[header] = widget
+                lineLayout.addWidget(widget)
             elif type == "M":
-                print("yo implement multiple elements boyeeee")
+                widget = QTextEdit(unfactorText(elementContent[0]))
+                widget.textChanged.connect(self.unSave)
+                self.fileWidgets[header] = widget
+                lineLayout.addWidget(widget)
+            elif type == "C":
+                print("complex element can have multiple of each other")
             self.layout.addLayout(lineLayout)
             
         self.setLayout(self.layout)
@@ -158,6 +182,41 @@ class ElementsTab(QWidget):
             if content.split(":")[0] == element:
                 contents.append(content.split(":")[1])
         return contents
+        
+    def unSave(self):
+        if self.saved:
+            self.tabWidget.setTabText(self.tabWidget.currentIndex(), self.tabWidget.tabText(self.tabWidget.currentIndex()) + "*")
+            self.saved = False
+            
+    def save(self): #next to implement: multi elements,
+        if not self.saved:
+            with open(self.filepath, "w") as f:
+                newFileContent = []
+                for content in self.filecontent:
+                    components = content.split(":")
+                    element = components[0]
+                    if element in self.fileWidgets:
+                        newContent = ""
+                        if isinstance(self.fileWidgets[element], QLineEdit):
+                            newContent = element + ":" + refactorText(self.fileWidgets[element].text()) + ":\n"
+                        else:
+                            newContent = element + ":" + refactorText(self.fileWidgets[element].toPlainText()) + ":\n"
+                        newFileContent.append(newContent)
+                    else:
+                        newFileContent.append(content)
+                f.writelines(newFileContent)
+            self.tabWidget.setTabText(self.tabWidget.currentIndex(), self.tabWidget.tabText(self.tabWidget.currentIndex())[0:len(self.tabWidget.tabText(self.tabWidget.currentIndex())) - 1])
+            self.saved = True
+
+def refactorText(str):
+    newStr = str.replace("\n", "\\n")
+    newStr = newStr.replace(":", "\\;")
+    return newStr
+    
+def unfactorText(str):
+    newStr = str.replace("\\;", ":")
+    newStr = newStr.replace("\\n", "\n")
+    return newStr
 
 app = QApplication(sys.argv)
 
