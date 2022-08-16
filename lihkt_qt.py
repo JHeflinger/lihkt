@@ -171,7 +171,11 @@ class ElementsTab(QWidget):
                 self.fileWidgets[header] = widget
                 lineLayout.addWidget(widget)
             elif type == "C":
-                print("complex element can have multiple of each other")
+                widget = ComplexElement(header, unfactorText(elementContent[0]), self)
+                #widget.textChanged.connect(self.unSave)
+                self.fileWidgets[header] = widget
+                lineLayout.addWidget(widget)
+                
             self.layout.addLayout(lineLayout)
             
         self.setLayout(self.layout)
@@ -207,6 +211,31 @@ class ElementsTab(QWidget):
                 f.writelines(newFileContent)
             self.tabWidget.setTabText(self.tabWidget.currentIndex(), self.tabWidget.tabText(self.tabWidget.currentIndex())[0:len(self.tabWidget.tabText(self.tabWidget.currentIndex())) - 1])
             self.saved = True
+
+class ComplexElement(QWidget):
+    def __init__(self, header, elementContent, parent):
+        super().__init__()
+        self.contents = elementContent.split("|")
+        self.layout = QVBoxLayout()
+        self.parentLayout = QVBoxLayout()
+        self.parent = parent
+        
+        for content in self.contents:
+            widget = QLineEdit(content)
+            widget.textChanged.connect(self.parent.unSave)
+            self.layout.addWidget(widget)
+        
+        addBtn = QPushButton("Add new " + header.lower())
+        addBtn.clicked.connect(self.addContent)
+        self.layout.addWidget(addBtn)
+        self.parentLayout.addLayout(self.layout)
+        self.parentLayout.addWidget(addBtn)
+        self.setLayout(self.parentLayout)
+        
+    def addContent(self):
+        widget = QLineEdit("")
+        widget.textChanged.connect(self.parent.unSave)
+        self.layout.addWidget(widget)
 
 def refactorText(str):
     newStr = str.replace("\n", "\\n")
