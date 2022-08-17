@@ -172,7 +172,6 @@ class ElementsTab(QWidget):
                 lineLayout.addWidget(widget)
             elif type == "C":
                 widget = ComplexElement(header, unfactorText(elementContent[0]), self)
-                #widget.textChanged.connect(self.unSave)
                 self.fileWidgets[header] = widget
                 lineLayout.addWidget(widget)
                 
@@ -203,8 +202,10 @@ class ElementsTab(QWidget):
                         newContent = ""
                         if isinstance(self.fileWidgets[element], QLineEdit):
                             newContent = element + ":" + refactorText(self.fileWidgets[element].text()) + ":\n"
-                        else:
+                        elif isinstance(self.fileWidgets[element], QTextEdit):
                             newContent = element + ":" + refactorText(self.fileWidgets[element].toPlainText()) + ":\n"
+                        elif isinstance(self.fileWidgets[element], ComplexElement):
+                            newContent = element + ":" + refactorText(self.fileWidgets[element].getContentText()) + ":\n"
                         newFileContent.append(newContent)
                     else:
                         newFileContent.append(content)
@@ -219,23 +220,45 @@ class ComplexElement(QWidget):
         self.layout = QVBoxLayout()
         self.parentLayout = QVBoxLayout()
         self.parent = parent
+        self.widgets = []
         
         for content in self.contents:
+            widgetRow = QHBoxLayout()
             widget = QLineEdit(content)
+            self.widgets.append(widget)
             widget.textChanged.connect(self.parent.unSave)
-            self.layout.addWidget(widget)
+            widgetRow.addWidget(widget)
+            delBtn = QPushButton("delete")
+            delBtn.clicked.connect(lambda:self.delete(widgetRow, len(self.widgets) - 1))
+            widgetRow.addWidget(delBtn)
+            self.layout.addLayout(widgetRow)
         
         addBtn = QPushButton("Add new " + header.lower())
         addBtn.clicked.connect(self.addContent)
-        self.layout.addWidget(addBtn)
         self.parentLayout.addLayout(self.layout)
         self.parentLayout.addWidget(addBtn)
         self.setLayout(self.parentLayout)
         
+    def delete(self, layout, index):
+        self.widgets.pop(index)
+        layout.itemAt(0).widget().deleteLater()
+        layout.itemAt(1).widget().deleteLater()
+        
     def addContent(self):
+        widgetRow = QHBoxLayout()
         widget = QLineEdit("")
+        self.widgets.append(widget)
         widget.textChanged.connect(self.parent.unSave)
-        self.layout.addWidget(widget)
+        widgetRow.addWidget(widget)
+        delBtn = QPushButton("delete")
+        widgetRow.addWidget(delBtn)
+        self.layout.addLayout(widgetRow)
+        
+    def getContentText(self):
+        str = ""
+        for w in self.widgets:
+            str += (w.text() + "|")
+        return str[0:len(str) - 1]
 
 def refactorText(str):
     newStr = str.replace("\n", "\\n")
