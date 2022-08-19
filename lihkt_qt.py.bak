@@ -218,20 +218,26 @@ class ComplexElement(QWidget):
         super().__init__()
         self.contents = elementContent.split("|")
         self.layout = QVBoxLayout()
+        self.layout.setSpacing(0)
         self.parentLayout = QVBoxLayout()
         self.parent = parent
         self.widgets = []
+        self.activeWidgets = []
         
+        index = 0
         for content in self.contents:
-            widgetRow = QHBoxLayout()
             widget = QLineEdit(content)
             self.widgets.append(widget)
+            #self.layouts.append(widgetRow)
             widget.textChanged.connect(self.parent.unSave)
-            widgetRow.addWidget(widget)
-            delBtn = QPushButton("delete")
-            delBtn.clicked.connect(lambda:self.delete(widgetRow, len(self.widgets) - 1))
-            widgetRow.addWidget(delBtn)
-            self.layout.addLayout(widgetRow)
+            #widgetRow.addWidget(widget)
+            #delBtn = QPushButton("delete")
+            #delBtn.clicked.connect(lambda:self.delete(widgetRow))
+            #widgetRow.addWidget(delBtn)
+            widgetRow = self.WidgetRow(widget, self, index)
+            self.activeWidgets.append(index)
+            self.layout.addWidget(widgetRow)
+            index += 1
         
         addBtn = QPushButton("Add new " + header.lower())
         addBtn.clicked.connect(self.addContent)
@@ -239,27 +245,38 @@ class ComplexElement(QWidget):
         self.parentLayout.addWidget(addBtn)
         self.setLayout(self.parentLayout)
         
-    def delete(self, layout, index):
-        print("deleteme!")
-        self.widgets.pop(index)
-        layout.itemAt(0).widget().deleteLater()
-        layout.itemAt(1).widget().deleteLater()
-        
     def addContent(self):
-        widgetRow = QHBoxLayout()
         widget = QLineEdit("")
         self.widgets.append(widget)
         widget.textChanged.connect(self.parent.unSave)
-        widgetRow.addWidget(widget)
-        delBtn = QPushButton("delete")
-        widgetRow.addWidget(delBtn)
-        self.layout.addLayout(widgetRow)
+        widgetRow = self.WidgetRow(widget, self, len(self.widgets) - 1)
+        self.activeWidgets.append(len(self.widgets) - 1)
+        self.layout.addWidget(widgetRow)
         
     def getContentText(self):
         str = ""
-        for w in self.widgets:
-            str += (w.text() + "|")
+        for id in self.activeWidgets:
+            str += (self.widgets[id].text() + "|")
         return str[0:len(str) - 1]
+        
+    class WidgetRow(QWidget):
+        def __init__(self, content, parent, index):
+            super().__init__()
+            self.parent = parent
+            self.layout = QHBoxLayout()
+            self.content = content
+            self.index = index
+            self.delete_button = QPushButton("delete")
+            self.delete_button.clicked.connect(self.delete)
+            self.layout.addWidget(self.content)
+            self.layout.addWidget(self.delete_button)
+            self.layout.setSpacing(0)
+            self.setLayout(self.layout)
+            
+        def delete(self):
+            self.layout.itemAt(1).widget().deleteLater()
+            self.layout.itemAt(0).widget().deleteLater()
+            self.parent.activeWidgets.remove(self.index)
 
 def refactorText(str):
     newStr = str.replace("\n", "\\n")
